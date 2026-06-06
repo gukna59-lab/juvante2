@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, Search, Grid, List, PlaySquare, TrendingUp, Star, Eye, ChevronRight, LayoutGrid, MonitorPlay, Film, Tv, Clock, Languages, ExternalLink, Image as ImageIcon, X } from 'lucide-react';
-import logoSrc from '../assets/images/jvante_logo.svg';
+import { Logo } from './Lobby';
 import { animeData, Anime } from '../data/animeData';
 import { CustomPlayer } from './CustomPlayer';
 
@@ -266,7 +266,7 @@ export function AnimeHome({ onBack, user, username, avatar }: AnimeHomeProps) {
                </button>
                <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-bg-card rounded-xl flex items-center justify-center border border-border-card overflow-hidden p-1">
-                     <img src={logoSrc} alt="Jvante" className="w-full h-full object-contain" />
+                     <Logo />
                   </div>
                   <div className="hidden sm:block">
                      <h1 className="text-xl font-black tracking-tighter text-blue-500 leading-none">JVANTE</h1>

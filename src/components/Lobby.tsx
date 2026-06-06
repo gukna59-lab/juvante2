@@ -27,6 +27,22 @@ const COUNTRIES = [
   { code: 'JP', name: 'Япония' },
   { code: 'CN', name: 'Китай' },
   { code: 'KR', name: 'Южная Корея' },
+  // Adding 15 new ones as requested:
+  { code: 'ID', name: 'Индонезия' },
+  { code: 'MY', name: 'Малайзия' },
+  { code: 'PH', name: 'Филиппины' },
+  { code: 'VN', name: 'Вьетнам' },
+  { code: 'TH', name: 'Таиланд' },
+  { code: 'IN', name: 'Индия' },
+  { code: 'BR', name: 'Бразилия' },
+  { code: 'MX', name: 'Мексика' },
+  { code: 'AR', name: 'Аргентина' },
+  { code: 'CA', name: 'Канада' },
+  { code: 'AU', name: 'Австралия' },
+  { code: 'SE', name: 'Швеция' },
+  { code: 'NO', name: 'Норвегия' },
+  { code: 'DK', name: 'Дания' },
+  { code: 'NL', name: 'Нидерланды' },
 ];
 
 interface LobbyProps {
@@ -102,6 +118,19 @@ export function Lobby({ onJoin, onWatchAnime, user, defaultUsername, defaultAvat
   const [isRegistering, setIsRegistering] = useState(false);
   const [authError, setAuthError] = useState('');
   
+  const [chatBg, setChatBg] = useState(() => localStorage.getItem('chatBg') || '');
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setChatBg(localStorage.getItem('chatBg') || '');
+    };
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('chatBg_changed', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('chatBg_changed', handleStorageChange);
+    };
+  }, []);
+
   const [activeModal, setActiveModal] = useState<'create' | 'join' | 'friends' | 'watchAlone' | 'profile' | 'settings' | 'viewProfile' | null>(null);
   const [viewingUser, setViewingUser] = useState<any | null>(null);
   
@@ -471,7 +500,7 @@ export function Lobby({ onJoin, onWatchAnime, user, defaultUsername, defaultAvat
              )}
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight truncate max-w-[150px]">{username}</h1>
+            <h1 className="text-xl font-bold tracking-tight truncate max-w-[150px] flex items-center gap-1">{username} {user?.isCreator && <BadgeCheck className="w-5 h-5 text-amber-500" />}</h1>
             <p className="text-xs text-emerald-400 mt-0.5 flex items-center gap-1">
               <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
               В сети
@@ -611,26 +640,18 @@ export function Lobby({ onJoin, onWatchAnime, user, defaultUsername, defaultAvat
                        <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} className="w-full bg-bg-main border border-border-card rounded-xl px-4 py-2 text-sm focus:border-blue-500/50 outline-none resize-none" placeholder="Расскажите о себе..." />
                     </div>
                     <div className="space-y-2">
-                       <label className="text-xs font-medium text-zinc-400">Страна</label>
-                       <select 
-                          value={country} 
-                          onChange={e => setCountry(e.target.value)}
-                          className="w-full bg-bg-main border border-border-card rounded-xl px-4 py-2 text-sm focus:border-blue-500/50 outline-none appearance-none cursor-pointer"
-                       >
-                          {COUNTRIES.map(c => (
-                             <option key={c.code} value={c.code}>
-                                {c.name}
-                             </option>
-                          ))}
-                       </select>
+                       <label className="text-xs font-medium text-zinc-400">Страна</label> <div className="relative"> <select value={country} onChange={e => setCountry(e.target.value)} className="w-full bg-bg-main border border-border-card rounded-xl pl-10 pr-4 py-2 text-sm focus:border-blue-500/50 outline-none appearance-none cursor-pointer"> {COUNTRIES.map(c => ( <option key={c.code} value={c.code}> {c.name} </option> ))} </select> <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none flex items-center justify-center"> {country ? generateFlagEmoji(country) : <Globe className="w-4 h-4 text-zinc-500" />} </div> </div>
                     </div>
                     <button onClick={handleSaveProfile} className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-all">Сохранить</button>
                   </div>
                 </div>
               )}
 
+              {activeModal === 'settings' && chatBg && (
+                  <div className="absolute inset-0 z-0 opacity-20 bg-cover bg-center pointer-events-none rounded-[2rem] animate-pulse" style={{ backgroundImage: `url(${chatBg})` }}></div>
+              )}
               {activeModal === 'settings' && (
-                <div className="space-y-6">
+                <div className="space-y-6 relative z-10">
                   <div className="text-center">
                     <div className="w-12 h-12 bg-zinc-800 text-zinc-400 rounded-2xl mx-auto flex items-center justify-center mb-4"><Settings className="w-6 h-6" /></div>
                     <h2 className="text-xl font-bold">Настройки</h2>
@@ -648,6 +669,14 @@ export function Lobby({ onJoin, onWatchAnime, user, defaultUsername, defaultAvat
                         </label>
                      </div>
 
+                                          <div className="p-4 bg-bg-main border border-border-card rounded-xl space-y-2 relative z-10">
+                        <label className="text-sm font-semibold block">Анимированный Фон чата и настроек (URL)</label>
+                        <p className="text-xs text-text-muted mb-2">Оставьте пустым для стандартного фона.</p>
+                        <input type="text" placeholder="https://..." defaultValue={localStorage.getItem('chatBg') || ''} onBlur={(e) => {
+                           localStorage.setItem('chatBg', e.target.value.trim());
+                           window.dispatchEvent(new Event('chatBg_changed'));
+                        }} className="w-full bg-bg-card border border-border-card rounded-lg px-3 py-2 text-sm focus:border-blue-500/50 outline-none" />
+                     </div>
                      <button onClick={handleLogout} className="w-full flex justify-between items-center px-4 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 font-medium rounded-xl transition-colors border border-red-500/20">
                         Выйти из аккаунта
                         <LogOut className="w-5 h-5" />
@@ -739,7 +768,11 @@ export function Lobby({ onJoin, onWatchAnime, user, defaultUsername, defaultAvat
                      </div>
                   )}
                   <div className="pt-2">
-                     {friends.includes(viewingUser.uid) ? (
+                     {viewingUser.uid === user?.uid ? (
+                        <button onClick={() => setActiveModal('profile')} className="w-full py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-semibold rounded-xl border border-zinc-700 transition-all flex items-center justify-center gap-2">
+                           <Settings className="w-4 h-4" /> Редактировать профиль
+                        </button>
+                     ) : friends.includes(viewingUser.uid) ? (
                         <button onClick={() => { setActiveModal(null); handleRemoveFriend(viewingUser.uid); }} className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 font-semibold rounded-xl border border-red-500/20 transition-all">Удалить из друзей</button>
                      ) : sentRequests.includes(viewingUser.uid) ? (
                         <button disabled className="w-full py-3 bg-zinc-800 text-zinc-500 font-semibold rounded-xl border border-zinc-700 transition-all cursor-not-allowed">Заявка отправлена</button>
@@ -830,7 +863,7 @@ export function Lobby({ onJoin, onWatchAnime, user, defaultUsername, defaultAvat
                                   {friend.avatar ? <img src={friend.avatar} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[10px] font-bold">{friend.username.substring(0,2).toUpperCase()}</div>}
                                </div>
                                <div className={`absolute bottom-0 left-6 w-2.5 h-2.5 rounded-full border border-[#0A0C10] ${isOnline ? 'bg-emerald-500' : 'bg-zinc-500'}`} title={isOnline ? 'Онлайн' : 'Оффлайн'}></div>
-                               <span className="text-sm font-medium text-white truncate">{friend.username}</span>
+                               <span className="text-sm font-medium text-white truncate flex items-center gap-1">{friend.username} {friend.isCreator && <BadgeCheck className="w-4 h-4 text-amber-500" />}</span>
                             </button>
                           </div>
                         )})}

@@ -64,6 +64,20 @@ export function Chat({ messages, onSendMessage }: ChatProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [chatBg, setChatBg] = useState(() => localStorage.getItem('chatBg') || '');
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setChatBg(localStorage.getItem('chatBg') || '');
+    };
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('chatBg_changed', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('chatBg_changed', handleStorageChange);
+    };
+  }, []);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -159,7 +173,8 @@ export function Chat({ messages, onSendMessage }: ChatProps) {
   };
 
   return (
-    <div className="flex-1 lg:flex-none flex flex-col h-auto lg:h-full bg-bg-card lg:border-l border-t lg:border-t-0 border-border-card lg:w-[320px] xl:w-[320px] min-h-0 shadow-2xl">
+    <div className="flex-1 lg:flex-none flex flex-col h-auto lg:h-full bg-bg-card lg:border-l border-t lg:border-t-0 border-border-card lg:w-[320px] xl:w-[320px] min-h-0 shadow-2xl relative">
+      {chatBg && <div className="absolute inset-0 z-0 opacity-20 bg-cover bg-center pointer-events-none animate-pulse" style={{ backgroundImage: `url(${chatBg})` }}></div>}
       <div className="flex-shrink-0 p-4 border-b border-border-card bg-bg-card/80 backdrop-blur-md relative z-10">
         <h2 className="text-xs font-black uppercase tracking-[0.2em] text-[#3B82F6] font-display">Чат комнаты</h2>
       </div>
